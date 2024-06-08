@@ -1,5 +1,6 @@
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import locale
@@ -12,6 +13,11 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.vectorstores import FAISS
 from langchain.chains import RetrievalQA
+import logging
+
+# Configuración de logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
@@ -22,7 +28,8 @@ class PDFRequest(BaseModel):
     pdf_path: str
     question: str
 
-# Load Llama 2 model
+# Carga del modelo Llama 2
+logger.info("Cargando modelo Llama 2...")
 model_name = "TheBloke/Llama-2-13b-Chat-GPTQ"
 model = AutoModelForCausalLM.from_pretrained(model_name, device_map="auto", trust_remote_code=True)
 tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
@@ -41,8 +48,9 @@ pipe = pipeline(
 )
 
 llm = HuggingFacePipeline(pipeline=pipe)
+logger.info("Modelo cargado correctamente.")
 
-# Initialize components
+# Inicialización de componentes
 template = """
 <s>[INST] <<SYS>>
 You are an AI assistant. You are truthful, unbiased and honest in your response.
@@ -57,21 +65,26 @@ prompt = PromptTemplate(input_variables=["text"], template=template)
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=1024, chunk_overlap=128)
 embeddings = HuggingFaceEmbeddings()
 
-# API endpoints
-
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the FastAPI LLM service"}
 
 @app.post("/generate/")
 def generate_text(text: str):
-    formatted_prompt = prompt.format(text=text)
-    result = llm(formatted_prompt)
-    return {"result": result.strip()}
+    try:
+        logger.info("Generando texto para: %s", text)
+        formatted_prompt = prompt.format(text=text)
+        result = llm(formatted_prompt)
+        logger.info("Texto generado correctamente.")
+        return {"result": result.strip()}
+    except Exception as e:
+        logger.error("Error generando texto: %s", str(e))
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/rag/web/")
 def rag_from_web(request: QueryRequest):
     try:
+        logger.info("Cargando documentos web...")
         web_loader = UnstructuredURLLoader(urls=["https://en.wikipedia.org/wiki/Solar_System"], mode="elements", strategy="fast")
         web_doc = web_loader.load()
         updated_web_doc = filter_complex_metadata(web_doc)
@@ -97,14 +110,18 @@ Question: {question} [/INST]
             chain_type_kwargs={"prompt": prompt},
         )
 
+        logger.info("Invocando RAG para la pregunta: %s", request.question)
         result = Chain_web.invoke(request.question)
+        logger.info("RAG completado.")
         return {"response": result['result'].strip()}
     except Exception as e:
+        logger.error("Error en RAG desde web: %s", str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/rag/pdf/")
 def rag_from_pdf(request: PDFRequest):
     try:
+        logger.info("Cargando documento PDF desde: %s", request.pdf_path)
         pdf_loader = UnstructuredPDFLoader(request.pdf_path)
         pdf_doc = pdf_loader.load()
         updated_pdf_doc = filter_complex_metadata(pdf_doc)
@@ -130,7 +147,10 @@ Question: {question} [/INST]
             chain_type_kwargs={"prompt": prompt},
         )
 
+        logger.info("Invocando RAG para la pregunta: %s", request.question)
         result = Chain_pdf.invoke(request.question)
+        logger.info("RAG completado.")
         return {"response": result['result'].strip()}
     except Exception as e:
+        logger.error("Error en RAG desde PDF: %s", str(e))
         raise HTTPException(status_code=500, detail=str(e))
