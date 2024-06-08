@@ -1,8 +1,9 @@
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import locale
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
 from langchain.llms import HuggingFacePipeline
 from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig, pipeline
 from langchain.prompts import PromptTemplate
@@ -15,14 +16,6 @@ from langchain.chains import RetrievalQA
 
 app = FastAPI()
 
-# Configurar CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 class QueryRequest(BaseModel):
     question: str
 
