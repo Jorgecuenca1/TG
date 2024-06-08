@@ -33,7 +33,7 @@ class PDFRetriever(PdfDocumentRetriever):
         return texts
 
 # Configurar la cadena de RAG
-pdf_path = "path_to_your_pdf.pdf"  # Reemplaza esto con la ruta a tu PDF
+pdf_path = "Solar-System-Wikipedia.pdf"  # Reemplaza esto con la ruta a tu PDF
 retriever = PDFRetriever(pdf_path)
 rag_chain = RetrievalAugmentedGeneration(retriever=retriever)
 
