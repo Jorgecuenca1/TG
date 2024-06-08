@@ -31,7 +31,7 @@ def load_llama_model():
         model_name = "TheBloke/Llama-2-13b-Chat-GPTQ"
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
-            device_map="gpu",
+            device_map="cuda:0",
             trust_remote_code=True,
         )
         tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
