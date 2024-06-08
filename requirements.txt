@@ -12,3 +12,5 @@ pikepdf==8.13.0
 pypdf==4.0.2
 pillow_heif==0.15.0
 unstructured_pytesseract
+fastapi
+uvicorn
