@@ -3,8 +3,6 @@ from pydantic import BaseModel
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 import fitz  # PyMuPDF
-from langchain.chains import RetrievalAugmentedGeneration
-from langchain.retrievers import PdfDocumentRetriever
 
 # Inicializar FastAPI
 app = FastAPI()
@@ -18,24 +16,14 @@ model = AutoModelForCausalLM.from_pretrained(model_name)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.to(device)
 
-# Configurar LangChain con PyMuPDF para manejar PDFs
-class PDFRetriever(PdfDocumentRetriever):
-    def __init__(self, file_path):
-        super().__init__()
-        self.file_path = file_path
-        self.document = fitz.open(file_path)
-
-    def get_documents(self):
-        texts = []
-        for page_num in range(len(self.document)):
-            page = self.document.load_page(page_num)
-            texts.append(page.get_text())
-        return texts
-
-# Configurar la cadena de RAG
-pdf_path = "Solar-System-Wikipedia.pdf"  # Reemplaza esto con la ruta a tu PDF
-retriever = PDFRetriever(pdf_path)
-rag_chain = RetrievalAugmentedGeneration(retriever=retriever)
+# Función para recuperar texto desde un PDF
+def retrieve_text_from_pdf(file_path):
+    document = fitz.open(file_path)
+    texts = []
+    for page_num in range(len(document)):
+        page = document.load_page(page_num)
+        texts.append(page.get_text())
+    return texts
 
 # Modelo para las solicitudes de entrada
 class Query(BaseModel):
@@ -44,8 +32,9 @@ class Query(BaseModel):
 # Endpoint de consulta
 @app.post("/query/")
 async def query(query: Query):
-    # Recuperar los documentos relevantes
-    retrieved_docs = retriever.get_documents()
+    # Recuperar los documentos relevantes desde un PDF
+    pdf_path = "Solar-System-Wikipedia.pdf"  # Reemplaza esto con la ruta a tu PDF
+    retrieved_docs = retrieve_text_from_pdf(pdf_path)
     retrieved_text = "\n".join(retrieved_docs)
 
     # Generar una respuesta usando el modelo de lenguaje
