@@ -123,7 +123,7 @@ for query in queries:
 # RAG from PDF Files
 # Uncomment the following lines to download and load PDF files
 #!gdown "https://github.com/muntasirhsn/datasets/raw/main/Solar-System-Wikipedia.pdf"
-pdf_loader = UnstructuredPDFLoader("/content/Solar-System-Wikipedia.pdf")
+pdf_loader = UnstructuredPDFLoader("Solar-System-Wikipedia.pdf")
 pdf_doc = pdf_loader.load()
 updated_pdf_doc = filter_complex_metadata(pdf_doc)
 
