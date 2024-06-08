@@ -1,6 +1,6 @@
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
-
+from langchain_huggingface import HuggingFaceEmbeddings
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import locale
