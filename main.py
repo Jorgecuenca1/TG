@@ -18,6 +18,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 # Cargar el modelo y el tokenizador de Hugging Face
 model_name = "openlm-research/open_llama_7b"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
@@ -65,6 +66,8 @@ def generate_answer(prompt, temperature=0.8, num_beams=5, max_new_tokens=150, do
             do_sample=do_sample
         )
     answer = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    # Extraer solo la respuesta, asumiendo que la respuesta sigue después de 'Respuesta:'
+    answer = answer.split("Respuesta:")[-1].strip()
     return answer
 
 # Endpoint de consulta
