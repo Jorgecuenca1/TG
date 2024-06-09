@@ -30,8 +30,10 @@ model.to(device)
 # Template para el prompt
 prompt_template = Template("""
 <s>[INST] <<SYS>>
-Use the following context to Answer the question at the end. Do not use any other information. Response me with the information thanks if say hi ,say hi iam bitlink ai if question other thing response good.
+Use the following context to Answer the question at the end. Do not use any other information. give the best answer of bitlink.
 <</SYS>>
+
+$context
 
 Question: $question [/INST]
 """)
