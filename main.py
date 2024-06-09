@@ -90,10 +90,10 @@ async def send_message(query: Query):
 
 # Endpoint para guardar la mejor respuesta
 @app.post("/best_answer/")
-async def best_answer(answer: dict):
+async def best_answer(answer: BestAnswer):
     try:
-        user_message = answer.get("question", "")
-        best_response = answer.get("response", "")
+        user_message = answer.question
+        best_response = answer.response
 
         # Ruta al archivo JSON donde se guardarán las preguntas y respuestas
         filename = "best_answers.json"
@@ -111,6 +111,15 @@ async def best_answer(answer: dict):
         # Escribir los datos actualizados de nuevo al archivo JSON
         with open(filename, "w") as file:
             json.dump(data, file, indent=4)
+
+        # Agregar la respuesta al PDF
+        pdf_path = "bitlink.pdf"
+        document = fitz.open(pdf_path)
+        page = document.load_page(-1)  # Agregar al final del PDF
+        text = f"Question: {user_message}\nAnswer: {best_response}"
+        rect = fitz.Rect(72, 72, 500, 200)  # Ajustar las coordenadas y el tamaño del cuadro de texto
+        page.insert_textbox(rect, text, fontsize=12, fontname="helv")
+        document.save(pdf_path)
 
         return {"status": "success"}
     except Exception as e:
