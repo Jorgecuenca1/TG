@@ -13,7 +13,7 @@ tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModelForCausalLM.from_pretrained(model_name)
 
 # Asegúrate de mover el modelo a la GPU si está disponible
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda")
 model.to(device)
 
 # Función para recuperar texto desde un PDF
@@ -33,7 +33,7 @@ class Query(BaseModel):
 @app.post("/query/")
 async def query(query: Query):
     # Recuperar los documentos relevantes desde un PDF
-    pdf_path = "Solar-System-Wikipedia.pdf"  # Reemplaza esto con la ruta a tu PDF
+    pdf_path = "bitlink.pdf"  # Reemplaza esto con la ruta a tu PDF
     retrieved_docs = retrieve_text_from_pdf(pdf_path)
     retrieved_text = "\n".join(retrieved_docs)
 
