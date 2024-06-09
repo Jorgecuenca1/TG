@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from transformers import AutoModelForCausalLM, AutoTokenizer
+from fastapi.middleware.cors import CORSMiddleware
 import torch
 import fitz  # PyMuPDF
 import os
@@ -9,7 +10,14 @@ from string import Template
 
 # Inicializar FastAPI
 app = FastAPI()
-
+# Configurar CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Permitir todas las orígenes, cambiar a ["http://localhost:3000"] en producción
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 # Cargar el modelo y el tokenizador de Hugging Face
 model_name = "openlm-research/open_llama_7b"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
