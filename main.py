@@ -88,7 +88,12 @@ async def send_message(query: Query):
 
     return {"answer1": answer1, "answer2": answer2}
 
-# Endpoint para guardar la mejor respuesta
+# Modelo para las solicitudes de entrada
+class BestAnswer(BaseModel):
+    question: str
+    response: str
+
+# Endpoint para guardar la mejor respuesta y agregarla al PDF
 @app.post("/best_answer/")
 async def best_answer(answer: BestAnswer):
     try:
