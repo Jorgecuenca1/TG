@@ -18,6 +18,7 @@ model = AutoModelForCausalLM.from_pretrained(model_name)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.to(device)
 
+
 # Función para recuperar texto desde un PDF
 def retrieve_text_from_pdf(file_path):
     document = fitz.open(file_path)
@@ -27,43 +28,38 @@ def retrieve_text_from_pdf(file_path):
         texts.append(page.get_text())
     return texts
 
+
 # Modelo para las solicitudes de entrada
-class Message(BaseModel):
-    message: str
+class Query(BaseModel):
+    question: str
+
+
+# Función para generar respuesta con manejo de memoria
+def generate_answer(prompt):
+    inputs = tokenizer(prompt, return_tensors="pt").to(device)
+    with torch.no_grad():
+        outputs = model.generate(**inputs, max_new_tokens=150)
+    answer = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    return answer
+
 
 # Endpoint de consulta
 @app.post("/send_message/")
-async def send_message(message: Message):
-    try:
-        user_message = message.message
+async def send_message(query: Query):
+    # Recuperar los documentos relevantes desde un PDF
+    pdf_path = "bitlink.pdf"  # Reemplaza esto con la ruta a tu PDF
+    retrieved_docs = retrieve_text_from_pdf(pdf_path)
+    retrieved_text = "\n".join(retrieved_docs)
 
-        # Recuperar los documentos relevantes desde un PDF
-        pdf_path = "bitlink.pdf"  # Reemplaza esto con la ruta a tu PDF
-        retrieved_docs = retrieve_text_from_pdf(pdf_path)
-        retrieved_text = "\n".join(retrieved_docs)
+    # Generar dos respuestas distintas usando fragmentos más pequeños
+    prompt1 = f"Pregunta: {query.question}\nDocumentos recuperados:\n{retrieved_text[:1024]}\nRespuesta:"
+    prompt2 = f"Pregunta: {query.question}\nDocumentos recuperados:\n{retrieved_text[1024:2048]}\nRespuesta:"
 
-        # Generar dos respuestas únicas del modelo
-        responses = set()
-        while len(responses) < 2:
-            prompt = f"Pregunta: {user_message}\nDocumentos recuperados:\n{retrieved_text[:2048]}\nRespuesta:"
-            input_ids = tokenizer(prompt, return_tensors="pt").to(device)
-            with torch.no_grad():
-                output_ids = model.generate(
-                    input_ids,
-                    max_length=50 + len(responses) * 10,  # Incrementar la longitud máxima
-                    num_beams=3 + 2 * len(responses),  # Variar el número de beams
-                    no_repeat_ngram_size=2,
-                    temperature=0.8 + 0.2 * len(responses)  # Ajustar la temperatura
-                )
-            response = tokenizer.decode(output_ids[0], skip_special_tokens=True)
+    answer1 = generate_answer(prompt1)
+    answer2 = generate_answer(prompt2)
 
-            # Añadir la respuesta al conjunto si no es una repetición
-            responses.add(response)
+    return {"answer1": answer1, "answer2": answer2}
 
-        # Convertir el conjunto a una lista para retornar como respuesta
-        return {"messages": list(responses)}
-    except Exception as e:
-        return {"error": str(e)}
 
 # Endpoint para guardar la mejor respuesta
 @app.post("/best_answer")
@@ -92,8 +88,3 @@ async def best_answer(answer: dict):
         return {"status": "success"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
-
-# Ejecutar la aplicación
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
