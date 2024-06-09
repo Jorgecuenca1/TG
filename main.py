@@ -88,3 +88,36 @@ async def best_answer(answer: dict):
         return {"status": "success"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
+
+
+@app.post("/best_answer")
+async def best_answer(answer: dict):
+    try:
+        user_message = answer.get("question", "")
+        best_response = answer.get("response", "")
+
+        # Ruta al archivo JSON donde se guardarán las preguntas y respuestas
+        filename = "best_answers.json"
+
+        # Leer el archivo existente o crear uno nuevo si no existe
+        if os.path.exists(filename):
+            with open(filename, "r") as file:
+                data = json.load(file)
+        else:
+            data = []
+
+        # Agregar la nueva pareja pregunta-respuesta
+        data.append({user_message: best_response})
+
+        # Escribir los datos actualizados de nuevo al archivo JSON
+        with open(filename, "w") as file:
+            json.dump(data, file, indent=4)
+
+        return {"status": "success"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+# Ejecutar la aplicación
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
