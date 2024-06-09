@@ -66,7 +66,7 @@ async def send_message(message: Message):
         return {"error": str(e)}
 
 # Endpoint para guardar la mejor respuesta
-@app.post("/best_answer/")
+@app.post("/best_answer")
 async def best_answer(answer: dict):
     try:
         user_message = answer.get("question", "")
@@ -77,7 +77,7 @@ async def best_answer(answer: dict):
 
         # Leer el archivo existente o crear uno nuevo si no existe
         if os.path.exists(filename):
-            with open(filename, "r") as file):
+            with open(filename, "r") as file:
                 data = json.load(file)
         else:
             data = []
