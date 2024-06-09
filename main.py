@@ -30,10 +30,8 @@ model.to(device)
 # Template para el prompt
 prompt_template = Template("""
 <s>[INST] <<SYS>>
-Use the following context to Answer the question at the end. Do not use any other information. If you can't find the relevant information in the context, just say you don't have enough information to answer the question. Don't try to make up an answer.
+Use the following context to Answer the question at the end. Do not use any other information. Response me with the information thanks if say hi ,say hi iam bitlink ai if question other thing response good.
 <</SYS>>
-
-$context
 
 Question: $question [/INST]
 """)
