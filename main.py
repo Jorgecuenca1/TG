@@ -5,6 +5,7 @@ import torch
 import fitz  # PyMuPDF
 import os
 import json
+from string import Template
 
 # Inicializar FastAPI
 app = FastAPI()
@@ -18,6 +19,16 @@ model = AutoModelForCausalLM.from_pretrained(model_name)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.to(device)
 
+# Template para el prompt
+prompt_template = Template("""
+<s>[INST] <<SYS>>
+Use the following context to Answer the question at the end. Do not use any other information. If you can't find the relevant information in the context, just say you don't have enough information to answer the question. Don't try to make up an answer.
+<</SYS>>
+
+$context
+
+Question: $question [/INST]
+""")
 
 # Función para recuperar texto desde un PDF
 def retrieve_text_from_pdf(file_path):
@@ -28,11 +39,9 @@ def retrieve_text_from_pdf(file_path):
         texts.append(page.get_text())
     return texts
 
-
 # Modelo para las solicitudes de entrada
 class Query(BaseModel):
     question: str
-
 
 # Función para generar respuesta con manejo de memoria
 def generate_answer(prompt):
@@ -42,7 +51,6 @@ def generate_answer(prompt):
     answer = tokenizer.decode(outputs[0], skip_special_tokens=True)
     return answer
 
-
 # Endpoint de consulta
 @app.post("/send_message/")
 async def send_message(query: Query):
@@ -51,18 +59,17 @@ async def send_message(query: Query):
     retrieved_docs = retrieve_text_from_pdf(pdf_path)
     retrieved_text = "\n".join(retrieved_docs)
 
-    # Generar dos respuestas distintas usando fragmentos más pequeños
-    prompt1 = f"Pregunta: {query.question}\nDocumentos recuperados:\n{retrieved_text[:1024]}\nRespuesta:"
-    prompt2 = f"Pregunta: {query.question}\nDocumentos recuperados:\n{retrieved_text[1024:2048]}\nRespuesta:"
+    # Usar el template para generar los prompts
+    prompt1 = prompt_template.substitute(context=retrieved_text[:2048], question=query.question)
+    prompt2 = prompt_template.substitute(context=retrieved_text[2048:4096], question=query.question)
 
     answer1 = generate_answer(prompt1)
     answer2 = generate_answer(prompt2)
 
     return {"answer1": answer1, "answer2": answer2}
 
-
 # Endpoint para guardar la mejor respuesta
-@app.post("/best_answer")
+@app.post("/best_answer/")
 async def best_answer(answer: dict):
     try:
         user_message = answer.get("question", "")
@@ -89,34 +96,6 @@ async def best_answer(answer: dict):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
-
-
-@app.post("/best_answer")
-async def best_answer(answer: dict):
-    try:
-        user_message = answer.get("question", "")
-        best_response = answer.get("response", "")
-
-        # Ruta al archivo JSON donde se guardarán las preguntas y respuestas
-        filename = "best_answers.json"
-
-        # Leer el archivo existente o crear uno nuevo si no existe
-        if os.path.exists(filename):
-            with open(filename, "r") as file:
-                data = json.load(file)
-        else:
-            data = []
-
-        # Agregar la nueva pareja pregunta-respuesta
-        data.append({user_message: best_response})
-
-        # Escribir los datos actualizados de nuevo al archivo JSON
-        with open(filename, "w") as file:
-            json.dump(data, file, indent=4)
-
-        return {"status": "success"}
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
 # Ejecutar la aplicación
 if __name__ == "__main__":
     import uvicorn
