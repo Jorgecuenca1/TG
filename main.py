@@ -44,10 +44,17 @@ class Query(BaseModel):
     question: str
 
 # Función para generar respuesta con manejo de memoria
-def generate_answer(prompt):
+def generate_answer(prompt, temperature=0.8, num_beams=5, max_length=150):
     inputs = tokenizer(prompt, return_tensors="pt").to(device)
     with torch.no_grad():
-        outputs = model.generate(**inputs, max_new_tokens=150)
+        outputs = model.generate(
+            inputs['input_ids'],
+            max_length=max_length,
+            num_beams=num_beams,
+            no_repeat_ngram_size=2,
+            temperature=temperature,
+            early_stopping=True
+        )
     answer = tokenizer.decode(outputs[0], skip_special_tokens=True)
     return answer
 
@@ -63,8 +70,9 @@ async def send_message(query: Query):
     prompt1 = prompt_template.substitute(context=retrieved_text[:2048], question=query.question)
     prompt2 = prompt_template.substitute(context=retrieved_text[2048:4096], question=query.question)
 
-    answer1 = generate_answer(prompt1)
-    answer2 = generate_answer(prompt2)
+    # Generar respuestas con parámetros diferentes para asegurar variedad
+    answer1 = generate_answer(prompt1, temperature=0.8, num_beams=5, max_length=150)
+    answer2 = generate_answer(prompt2, temperature=1.0, num_beams=3, max_length=150)
 
     return {"answer1": answer1, "answer2": answer2}
 
