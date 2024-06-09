@@ -44,7 +44,7 @@ def generate_answer(prompt):
 
 
 # Endpoint de consulta
-@app.post("/send_message")
+@app.post("/send_message/")
 async def send_message(query: Query):
     # Recuperar los documentos relevantes desde un PDF
     pdf_path = "bitlink.pdf"  # Reemplaza esto con la ruta a tu PDF
