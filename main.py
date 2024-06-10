@@ -94,6 +94,7 @@ class BestAnswer(BaseModel):
     response: str
 
 # Endpoint para guardar la mejor respuesta y agregarla al PDF
+# Endpoint para guardar la mejor respuesta y agregarla al PDF
 @app.post("/best_answer/")
 async def best_answer(answer: BestAnswer):
     try:
@@ -119,15 +120,19 @@ async def best_answer(answer: BestAnswer):
 
         # Agregar la respuesta al PDF
         pdf_path = "bitlink.pdf"
+        logging.info(f"Opening PDF: {pdf_path}")
         document = fitz.open(pdf_path)
-        page = document.load_page(-1)  # Agregar al final del PDF
+        page = document.load_page(-1)  # Obtener la última página del PDF
+        logging.info(f"Inserting text into PDF: {text}")
         text = f"Question: {user_message}\nAnswer: {best_response}"
         rect = fitz.Rect(72, 72, 500, 200)  # Ajustar las coordenadas y el tamaño del cuadro de texto
         page.insert_textbox(rect, text, fontsize=12, fontname="helv")
         document.save(pdf_path)
+        logging.info(f"PDF saved: {pdf_path}")
 
         return {"status": "success"}
     except Exception as e:
+        logging.error(f"Error occurred: {str(e)}")
         return {"status": "error", "message": str(e)}
 
 # Ejecutar la aplicación
