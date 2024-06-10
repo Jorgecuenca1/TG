@@ -9,6 +9,7 @@ import json
 from string import Template
 import logging
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 # Inicializar FastAPI
 app = FastAPI()
 # Configurar CORS
@@ -152,6 +153,28 @@ async def get_best_answers():
 
     except Exception as e:
         logging.error(f"Error occurred: {str(e)}")
+        return {"status": "error", "message": str(e)}
+
+# Endpoint para subir y guardar un archivo PDF
+@app.post("/upload_pdf/")
+async def upload_pdf(file: UploadFile = File(...)):
+    try:
+        # Directorio donde se guardarán los archivos subidos
+        upload_dir = "static"
+
+        # Crear el directorio si no existe
+        os.makedirs(upload_dir, exist_ok=True)
+
+        # Ruta completa del archivo subido
+        file_path = os.path.join(upload_dir, file.filename)
+
+        # Guardar el archivo
+        with open(file_path, "wb") as f:
+            f.write(await file.read())
+
+        return {"status": "success", "filename": file.filename}
+    except Exception as e:
+        logging.error(f"Error occurred while uploading file: {str(e)}")
         return {"status": "error", "message": str(e)}
 # Ejecutar la aplicación
 if __name__ == "__main__":
