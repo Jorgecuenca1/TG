@@ -8,6 +8,7 @@ import os
 import json
 from string import Template
 import logging
+from fastapi.responses import JSONResponse
 # Inicializar FastAPI
 app = FastAPI()
 # Configurar CORS
@@ -135,7 +136,23 @@ async def best_answer(answer: BestAnswer):
     except Exception as e:
         logging.error(f"Error occurred: {str(e)}")
         return {"status": "error", "message": str(e)}
+# Endpoint para obtener el contenido del archivo best_answers.json
+@app.get("/get_best_answers/")
+async def get_best_answers():
+    try:
+        filename = "best_answers.json"
 
+        # Verificar si el archivo existe
+        if os.path.exists(filename):
+            with open(filename, "r") as file:
+                data = json.load(file)
+            return JSONResponse(content=data)
+        else:
+            return JSONResponse(content={"message": "File not found"}, status_code=404)
+
+    except Exception as e:
+        logging.error(f"Error occurred: {str(e)}")
+        return {"status": "error", "message": str(e)}
 # Ejecutar la aplicación
 if __name__ == "__main__":
     import uvicorn
