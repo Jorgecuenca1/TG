@@ -123,8 +123,9 @@ async def best_answer(answer: BestAnswer):
         logging.info(f"Opening PDF: {pdf_path}")
         document = fitz.open(pdf_path)
         page = document.load_page(-1)  # Obtener la última página del PDF
-        logging.info(f"Inserting text into PDF: {text}")
+
         text = f"Question: {user_message}\nAnswer: {best_response}"
+        logging.info(f"Inserting text into PDF: {text}")
         rect = fitz.Rect(72, 72, 500, 200)  # Ajustar las coordenadas y el tamaño del cuadro de texto
         page.insert_textbox(rect, text, fontsize=12, fontname="helv")
         document.save(pdf_path)
