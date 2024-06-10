@@ -7,7 +7,7 @@ import fitz  # PyMuPDF
 import os
 import json
 from string import Template
-
+import logging
 # Inicializar FastAPI
 app = FastAPI()
 # Configurar CORS
