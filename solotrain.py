@@ -82,9 +82,10 @@ model.config.use_cache = False
 model.config.pretraining_tp = 1
 model.gradient_checkpointing_enable()
 
-# Asegúrate de que los parámetros del modelo requieran gradientes
+# Asegúrate de que los parámetros del modelo requieran gradientes solo si son de tipo flotante
 for param in model.parameters():
-    param.requires_grad = True
+    if param.dtype in [torch.float32, torch.float16, torch.bfloat16]:
+        param.requires_grad = True
 
 # Cargar tokenizador LLaMA
 tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
