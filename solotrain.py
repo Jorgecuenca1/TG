@@ -134,7 +134,7 @@ trainer = SFTTrainer(
 )
 
 # Entrenar modelo
-trainer.train()
+trainer.train(use_reentrant=False)
 
 # Guardar modelo entrenado
 trainer.model.save_pretrained(new_model)
@@ -153,6 +153,8 @@ base_model = AutoModelForCausalLM.from_pretrained(
     torch_dtype=torch.float16,
     device_map=device_map,
 )
+
+# Integrar el modelo base con los pesos LoRA
 model = PeftModel.from_pretrained(base_model, new_model)
 model = model.merge_and_unload()
 
@@ -166,8 +168,3 @@ prompt = "Como puedo encontrar trabajo de ingeniero?"
 pipe = pipeline(task="text-generation", model=model, tokenizer=tokenizer, max_length=200)
 result = pipe(f"<s>[INST] {prompt} [/INST]")
 print(result[0]['generated_text'])
-
-# Liberar VRAM
-del model
-del pipe
-gc.collect()
