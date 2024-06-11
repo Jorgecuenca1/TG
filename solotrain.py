@@ -82,6 +82,10 @@ model.config.use_cache = False
 model.config.pretraining_tp = 1
 model.gradient_checkpointing_enable()
 
+# Asegúrate de que los parámetros del modelo requieran gradientes
+for param in model.parameters():
+    param.requires_grad = True
+
 # Cargar tokenizador LLaMA
 tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
 tokenizer.pad_token = tokenizer.eos_token
