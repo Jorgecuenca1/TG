@@ -13,9 +13,6 @@ from peft import LoraConfig, PeftModel
 from trl import SFTTrainer
 import gc
 
-# Instalar las dependencias (acelerate, peft, bitsandbytes, transformers, trl)
-!pip install -q accelerate==0.21.0 peft==0.4.0 bitsandbytes==0.40.2 transformers==4.31.0 trl==0.4.7
-
 # Parámetros de configuración
 model_name = "NousResearch/Llama-2-7b-chat-hf"
 dataset_name = "mlabonne/guanaco-llama2-1k"
