@@ -12,6 +12,7 @@ from transformers import (
 from peft import LoraConfig, PeftModel
 from trl import SFTTrainer
 import gc
+import warnings
 
 # Configuración de variables de entorno
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
@@ -134,7 +135,7 @@ trainer = SFTTrainer(
 )
 
 # Entrenar modelo
-trainer.train(use_reentrant=False)
+trainer.train()
 
 # Guardar modelo entrenado
 trainer.model.save_pretrained(new_model)
