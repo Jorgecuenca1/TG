@@ -13,12 +13,15 @@ from peft import LoraConfig, PeftModel
 from trl import SFTTrainer
 import gc
 
+# Configuración de variables de entorno
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
+
 # Parámetros de configuración
 model_name = "NousResearch/Llama-2-7b-chat-hf"
 dataset_name = "mlabonne/guanaco-llama2-1k"
 new_model = "llama-2-7b-miniguanaco"
-lora_r = 64
-lora_alpha = 16
+lora_r = 32
+lora_alpha = 8
 lora_dropout = 0.1
 use_4bit = True
 bnb_4bit_compute_dtype = "float16"
@@ -28,8 +31,8 @@ output_dir = "./results"
 num_train_epochs = 1
 fp16 = False
 bf16 = False
-per_device_train_batch_size = 4
-per_device_eval_batch_size = 4
+per_device_train_batch_size = 2
+per_device_eval_batch_size = 2
 gradient_accumulation_steps = 1
 gradient_checkpointing = True
 max_grad_norm = 0.3
@@ -45,6 +48,9 @@ logging_steps = 25
 max_seq_length = None
 packing = False
 device_map = {"": 0}
+
+# Liberar memoria antes de comenzar
+torch.cuda.empty_cache()
 
 # Cargar dataset
 dataset = load_dataset(dataset_name, split="train")
@@ -74,6 +80,7 @@ model = AutoModelForCausalLM.from_pretrained(
 )
 model.config.use_cache = False
 model.config.pretraining_tp = 1
+model.gradient_checkpointing_enable()
 
 # Cargar tokenizador LLaMA
 tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
@@ -128,16 +135,9 @@ trainer.train()
 trainer.model.save_pretrained(new_model)
 logging.set_verbosity(logging.CRITICAL)
 
-# Pipeline de generación de texto con el nuevo modelo
-prompt = "Como puedo encontrar trabajo de ingeniero?"
-pipe = pipeline(task="text-generation", model=model, tokenizer=tokenizer, max_length=200)
-result = pipe(f"<s>[INST] {prompt} [/INST]")
-print(result[0]['generated_text'])
-
 # Liberar VRAM
-del model
-del pipe
 del trainer
+torch.cuda.empty_cache()
 gc.collect()
 
 # Recargar modelo en FP16 y fusionarlo con los pesos de LoRA
@@ -161,3 +161,8 @@ prompt = "Como puedo encontrar trabajo de ingeniero?"
 pipe = pipeline(task="text-generation", model=model, tokenizer=tokenizer, max_length=200)
 result = pipe(f"<s>[INST] {prompt} [/INST]")
 print(result[0]['generated_text'])
+
+# Liberar VRAM
+del model
+del pipe
+gc.collect()
