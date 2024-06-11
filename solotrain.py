@@ -13,6 +13,8 @@ from peft import LoraConfig, PeftModel
 from trl import SFTTrainer
 import gc
 
+# Instalar las dependencias (acelerate, peft, bitsandbytes, transformers, trl)
+!pip install -q accelerate==0.21.0 peft==0.4.0 bitsandbytes==0.40.2 transformers==4.31.0 trl==0.4.7
 
 # Parámetros de configuración
 model_name = "NousResearch/Llama-2-7b-chat-hf"
@@ -45,7 +47,7 @@ save_steps = 0
 logging_steps = 25
 max_seq_length = None
 packing = False
-device_map = {"": [0, 1]}
+device_map = {"": 0}
 
 # Cargar dataset
 dataset = load_dataset(dataset_name, split="train")
@@ -108,6 +110,7 @@ training_arguments = TrainingArguments(
     warmup_ratio=warmup_ratio,
     group_by_length=group_by_length,
     lr_scheduler_type=lr_scheduler_type,
+    report_to="tensorboard"
 )
 
 # Parámetros de fine-tuning supervisado
@@ -124,8 +127,7 @@ trainer = SFTTrainer(
 
 # Entrenar modelo
 trainer.train()
-# Guardar el modelo original
-model.save_pretrained("/modelooriginal")
+
 # Guardar modelo entrenado
 trainer.model.save_pretrained(new_model)
 logging.set_verbosity(logging.CRITICAL)
@@ -150,9 +152,9 @@ base_model = AutoModelForCausalLM.from_pretrained(
     torch_dtype=torch.float16,
     device_map=device_map,
 )
-
 model = PeftModel.from_pretrained(base_model, new_model)
 model = model.merge_and_unload()
+
 # Recargar tokenizador para guardarlo
 tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
 tokenizer.pad_token = tokenizer.eos_token
