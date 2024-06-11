@@ -150,11 +150,9 @@ base_model = AutoModelForCausalLM.from_pretrained(
     torch_dtype=torch.float16,
     device_map=device_map,
 )
-base_model.save_pretrained("./modelofp16")
 
 model = PeftModel.from_pretrained(base_model, new_model)
 model = model.merge_and_unload()
-model.save_pretrained("./modelonuevo")
 # Recargar tokenizador para guardarlo
 tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
 tokenizer.pad_token = tokenizer.eos_token
