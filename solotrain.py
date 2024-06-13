@@ -11,6 +11,9 @@ model_name = "openlm-research/open_llama_7b"
 model = AutoModelForCausalLM.from_pretrained(model_name)
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 
+# Configurar el token de padding
+tokenizer.pad_token = tokenizer.eos_token
+
 # Cargar el dataset para fine-tuning
 dataset = load_dataset("wikitext", "wikitext-2-raw-v1")
 tokenized_dataset = dataset.map(lambda x: tokenizer(x['text']), batched=True)
