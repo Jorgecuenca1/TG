@@ -26,7 +26,9 @@ training_args = TrainingArguments(
     output_dir=output_dir,
     overwrite_output_dir=True,
     num_train_epochs=3,
-    per_device_train_batch_size=4,
+    per_device_train_batch_size=1,  # Reducir el tamaño del batch
+    gradient_accumulation_steps=8,  # Acumular gradientes para simular un tamaño de batch mayor
+    fp16=True,  # Usar mixed precision training
     save_steps=10_000,
     save_total_limit=2,
 )
