@@ -1,7 +1,15 @@
 import os
+import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, Trainer, TrainingArguments, DataCollatorForLanguageModeling
 from datasets import load_dataset
 from peft import PeftModel
+
+# Configurar fragmentación de memoria
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
+
+# Limpiar la memoria de la GPU
+torch.cuda.empty_cache()
+torch.cuda.reset_peak_memory_stats()
 
 # Directorio para guardar el modelo ajustado
 output_dir = "./finetuned_open_llama_7b"
@@ -21,16 +29,16 @@ tokenized_dataset = dataset.map(lambda x: tokenizer(x['text']), batched=True)
 # Configurar el collator de datos
 data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
 
-# Configurar los argumentos de entrenamiento
+# Configurar los argumentos de entrenamiento mínimos
 training_args = TrainingArguments(
     output_dir=output_dir,
     overwrite_output_dir=True,
-    num_train_epochs=3,
-    per_device_train_batch_size=1,  # Reducir el tamaño del batch
-    gradient_accumulation_steps=8,  # Acumular gradientes para simular un tamaño de batch mayor
+    num_train_epochs=1,  # Reducir a una sola época
+    per_device_train_batch_size=1,  # Reducir el tamaño del batch al mínimo
+    gradient_accumulation_steps=1,  # Acumular gradientes en un solo paso
     fp16=True,  # Usar mixed precision training
     save_steps=10_000,
-    save_total_limit=2,
+    save_total_limit=1,
 )
 
 # Crear el entrenador
