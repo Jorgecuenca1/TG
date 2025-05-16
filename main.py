@@ -90,15 +90,41 @@ class Query(BaseModel):
 
 @app.post("/send_message/")
 async def send_message(query: Query):
-    # Recuperar contexto RAG desde PDF
+    text = query.question.strip().lower()
+
+    # Manejo de saludos
+    if any(greet in text for greet in ["hola", "hi", "¿cómo estás", "como estas"]):
+        return {"response": (
+            "Hola, ¿cómo estás? Hablas con el Asistente de Bitlink. "
+            "Para más información contáctanos al +57 310 2337052 (Jorge Cuenca)."
+        )}
+
+    # Manejo de identidad
+    if "quién eres" in text or "con quién hablo" in text:
+        return {"response": (
+            "Hablas con el Asistente de Bitlink. "
+            "Para más información contáctanos al +57 310 2337052 (Jorge Cuenca)."
+        )}
+
+    # Manejo de cotización
+    if any(keyword in text for keyword in ["cotiza", "precio", "presupuesto", "estimado"]):
+        return {"response": (
+            "Actualmente no manejo cotizaciones automáticas, te paso con un humano "
+            "para darte un estimado en COP. "
+            "Contacta a +57 310 2337052 (Jorge Cuenca)."
+        )}
+
+    # Si no era ninguno de los anteriores, usa RAG + LLM
     context = retrieve_text_from_pdf("bitlink.pdf")
     prompt = prompt_template.substitute(context=context, question=query.question)
+
     answer = generate_answer(prompt)
+    # Asegúrate de incluir el contacto
+    if "+57" not in answer:
+        answer += " Para más información contáctanos al +57 310 2337052 (Jorge Cuenca)."
+
     return {"response": answer}
 
-class BestAnswer(BaseModel):
-    question: str
-    response: str
 
 @app.post("/best_answer/")
 async def best_answer(answer: BestAnswer):
