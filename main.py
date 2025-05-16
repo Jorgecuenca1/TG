@@ -22,7 +22,7 @@ app.add_middleware(
 )
 
 # Cargar el modelo y el tokenizador de Hugging Face
-model_name = "openlm-research/open_llama_7b"
+model_name = "tomaszki/mistral-33-b"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModelForCausalLM.from_pretrained(model_name)
 #new model = AutoModelForCausalLM.from_pretrained("ruta/al/modelo2") # el nuevo model es el entrenamiento
