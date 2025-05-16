@@ -23,7 +23,7 @@ app.add_middleware(
 )
 
 # Cargar un modelo LLaMA de 33B cuantizado para caber en ~47 GB GPU
-model_name = "facebook/llama-33b"
+model_name = "openlm-research/open_llama_7"
 tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=False)
 model = AutoModelForCausalLM.from_pretrained(
     model_name,
