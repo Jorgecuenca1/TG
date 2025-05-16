@@ -59,8 +59,6 @@ Eres el Asistente de Bitlink, especializado en atención al cliente.
 Contexto:
 $context
 
-Pregunta:
-$question [/INST]
 """)
 
 # Función para recuperar texto desde un PDF
